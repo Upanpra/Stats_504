@@ -1,0 +1,351 @@
+---
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<center> <b> STAT 505: Homework1 
+
+ Pratima KC </b></center>
+
+```{r, include=TRUE, echo=FALSE}
+"This is a test line"
+
+```
+
+**Question 1 a: (1 point) Compute the means for each of the eight (age) subpopulations in the small-mouth bass data. Draw a plot of mean Length versus Age. Is there evidence for a linear relationship?**
+
+**Answer:** Yes, there is a linear relationship between the mean length and age.The plot of mean Length versus Age is given below:
+
+```{r, include=FALSE}
+library(alr4)
+#summary(wblake)
+#head(wblake)
+#ages=unique(wblake$Age)
+means_length= list()
+ages=c(1,2,3,4,5,6,7,8)
+for(i in ages){
+  print(i)
+  means_length[i]=mean(wblake[wblake$Age==i, "Length"])
+}
+```
+
+```{r, include=TRUE, echo=FALSE}
+plot(ages,means_length,  main="Length vs Age", xlab="Ages", ylab="Mean Length")
+
+```
+
+**Question 1b: (1 point) Compute the standard deviations for each of the eight (age) subpopulations in the smallmouth bass data. Draw a plot of the standard deviations of Length in each subpopulation versus Age. Does the variance appear constant across the different age populations?**
+
+**Answer:** No the variance is not constant across the different age populations. The plot of the standard deviations of Length in each subpopulation versus Age is given below:
+
+
+```{r, include=FALSE}
+sd_length= list()
+for(i in ages){
+  sd_length[i]=sd(wblake[wblake$Age==i, "Length"])
+}
+```
+
+```{r, include=TRUE, echo=FALSE}
+plot( ages,sd_length, main="SD vs Age", xlab="Ages", ylab="SD of Length")
+
+```
+
+**Question 1c: (2 points) Suppose that you want to estimate the relationship between the radius of a key scale (predictor) and the length of the fish (response). Make a scatterplot to investigate the possible linear relationship. Fit a simple linear regression Length ~ Scale and print the R summary. What do you observe?**
+
+**Answer** The scatter plot between a key scale (predictor) and the length of the fish (response) showed a heteroscedisticity. The scatter plot and summary is given below: 
+
+```{r, include=TRUE, echo=FALSE}
+plot(wblake$Scale, wblake$Length, main="Scatter plot of Scale and Length ", xlab = "Scale", ylab = "Length")
+
+```
+```{r, include=TRUE, echo=TRUE}
+fit_wblake<-lm(wblake$Length ~ wblake$Scale)
+summary(fit_wblake)
+```
+The observation showed $\hat{\beta}_{0}$ is 56.29 with standard error of 2.662 and $\hat{\beta}_{1}$ is 23.306 with standard error of 0.409. This mean for every unit increase in scale there will be 23.306 unit increase in length. The p-value is very small, less than the significant level of 0.01 which mean we can reject the null hypothesis.  
+
+**Question 1(d) (3 points) Plot the histogram of the residuals from the above regression and the TA plot (Tukey-Anscombe plot, TA plot involves plotting residuals (vertical axis) vs. fitted values (horizontal axis)). Do the normality and the constant variance assumptions appear to hold? Does this linear model seem appropriate? R hint: Use plot(lm(wblake$Length~wblake$Scale), which = 1)**
+
+**Answer** The histogram of the residuals and TA plot is given below: 
+
+```{r, include=TRUE, echo=FALSE}
+par(mfrow=c(1,2))
+hist(fit_wblake$residuals, main = "Residuals", xlab = "Residuals")
+plot(lm(wblake$Length~wblake$Scale), which = 1)
+```
+
+The histogram is almost normal with some slight skewed in left, this shows that it holds the normality. The TA plot showed that the variance is less for the value below 180 and higher for the higher values. This mean the variance is not constant. The linear model does not seem to be appropriate.
+
+**Question 1(e) (3 points) Find the fitted value, the 95% confidence interval, and the 95% prediction interval for the new data point Scale = 200.**
+
+**Answer**
+```{r, include=TRUE, echo=FALSE}
+new<-data.frame(Scale=200)
+fit<-lm(Length ~ Scale, data=wblake)
+predict(fit, new, se.fit=TRUE)$fit
+#for confidence interval
+pred.w.clim<-predict(fit, new, interval = "confidence")
+# prediction interval
+pred.w.plim<-predict(fit, new, interval = "prediction")
+pred.w.clim
+pred.w.plim
+```
+
+
+**Question 2(a) (1 point) Identify the predictor and the response.**
+
+**Answer** PPgdp is predictor and Fertility is response variable.
+
+**Question 2(b) (1 point) Draw the scatterplot of Fertility on the vertical axis versus PPgdp on the horizontal axis and summarize the information in this graph. Does linear model seem appropriate here?**
+
+**Answer** The scatter plot shows that the fertility is very high in the population with the lower per capita GDP and it drops with in increase in per capita GDP, creating a curve.The linear model doesnot seem to be appropriate. The scatter plot of Fertility on vertical axis verus PPgdp on the horizontal axis is given below:
+
+```{r, include=TRUE, echo=FALSE}
+plot(UN1$PPgdp, UN1$Fertility, main="Fertility vs. PPgdp", xlab="PPgdp", ylab = "Fertility")
+```
+
+**Question 2(c) (1 point) Draw the scatterplot of log(Fertility) versus log(PPgdp), using the logarithm with base 10. Does the simple linear regression model seem plausible for a summary of this graph?**
+
+**Answer** The scatter plot shows that the fertility rate decreases with the increase in the per capita GDP increases. Yes, simple linear regression model seem plausible for a summary of this graph. The scatter plot of log(Fertility) versus log(PPgdp) is given below. 
+
+```{r, include=TRUE, echo=FALSE}
+plot(log10(UN1$PPgdp), log10(UN1$Fertility), main="log(Fertility) vs. log(PPgdp)", xlab="PPgdp", ylab = "Fertility")
+```
+
+**Question 2(d) (1 point) Fit a simple linear regression to the log transformed data from c and print the summary.**
+**Answer** The fitted simple linear regression to the log transformed summary is given below:
+
+```{r, include=TRUE, echo=FALSE}
+fitUN<-lm(log10(UN1$Fertility)~ log10(UN1$PPgdp)) 
+summary(fitUN)
+```
+
+**Question 2(e) (3 points) Look at the histogram and TA-plot of the residuals. What can you say about the assumptions on the errors?**
+**Answer** The histogram and TA-plot of residuals is given below:
+
+```{r, include=TRUE, echo=FALSE}
+par(mfrow=c(1,2))
+hist(fitUN$residuals, main = "Residuals", xlab = "Residuals")
+plot(fitUN, which=c(1))
+```
+
+
+The histogram is normally distributed which shows that it holds the normality. The TA plot shows that the variance is slightly not constant because there is higher variance in the middle right. 
+
+**Question 2(f) (2 points) Test the null hypothesis that the slope is zero versus the two-sided alternative at the 1% level. Give the t-value and a sentence to summarize the result.**
+
+**Answer** The t-value for slope log10(PPgdp) is -12.73 and the p-value is very small less than the significant level of 0.01 so we reject the null hypothesis.
+
+**Question 2(g) (3 points) Plot the marginal 99% confidence intervals for the intercept (Beta0) and slope (Beta1) in the model from c as well as the 99% confidence ellipse for vector (Beta0; Beta1)T . Would you reject the hypothesis (Beta0, Beta1)T = (1.1, -.2) at the 1% level?**
+
+**Answer**
+
+```{r, include=TRUE, echo=FALSE}
+confidenceEllipse(fitUN,grid=TRUE, xlab="Intercept", ylab="Slope", main="99% confidence region and intervals",levels=0.99)
+abline(h=confint(fitUN,level=.99)[2,1],lty=2,lwd=2,col="red") 
+abline(h=confint(fitUN,level=.99)[2,2],lty=2,lwd=2,col="red") 
+abline(v=confint(fitUN,level=.99)[1,1],lty=2,lwd=2,col="red") 
+abline(v=confint(fitUN,level=.99)[1,2],lty=2,lwd=2,col="red")
+points(1.1,-0.20,col="red",lwd=3)
+```
+
+Since the point $\left(\beta_{0}, \beta_{1}\right)^{T}$ = (1.1,-0.2) falls inside the confidence region and interval we cannot reject the null hypothesis. 
+
+**Question 3a** (1 point) Find 
+$d_i$  such that:
+$\hat{\beta}_{0}=\sum_{i=1}^{n} d_{i} y_{i}$
+
+**Answer** Here is the solution:
+
+$\begin{aligned} \hat{\beta}_{0} &=\bar{y}-\hat{\beta}_{1} \bar{x} \end{aligned}$
+
+Substituting $\hat{\beta}_{1}=\sum_{i=1}^{n} c_{i} y_{i}$ in the above equation
+
+$\begin{aligned}&=\bar{y}-\sum_{i=1}^{n} c_{i} y_{i} \bar{x} \end{aligned}$
+
+$\begin{aligned}\\ &=\sum_{i=1}^{n} \frac{y_{i}}{n}-\sum_{i=1}^{n} c_{i} y_{i} \bar{x} \end{aligned}$
+
+$\begin{aligned} \\ &=\sum_{i=1}^{n} y_{i}\left(\frac{1}{n}-c_{i} \bar{x}\right) \end{aligned}$
+
+Therefore: 
+$d_{i}=\left(\frac{1}{n}-c_{i} \bar{x}\right)$
+
+**Question 3b** (1 point) Show that
+$\mathrm{E}\left[\hat{\beta}_{0} | X=x\right]=\beta_{0}$
+
+**Answer** Here is the solution:
+
+$\mathrm{E}\left[\hat{\beta}_{0} | X=x\right]$
+
+Substituting $\hat{\beta}_{0}=\sum_{i=1}^{n} d_{i} y_{i}$ in the above equation
+
+$=E\left[\sum_{i=1}^{n} d i y i | X=x\right]$
+
+$=\sum_{i=1}^{n} d i * E[y i | X=x]$
+
+$=\sum_{i=1}^{n} d i\left(\beta_{0}+\beta_{1} x_{i}\right)$
+
+$=\beta_{0} \sum_{i=1}^{n} d i+\beta_{1} \sum_{i=1}^{n} d i x_{i}$
+
+Now, solving for $=\sum_{i=1}^{n} d i$ $=\sum_{i=1}^{n}\left(\frac{1}{n}-c_{i} \bar{x}\right)$ $=\sum_{i=1}^{n} \frac{1}{n}- \sum_{i=1}^{2} c_{i}\bar{x}$ 
+$=1-\bar{x} \sum_{i=1}^{2}c_{i}$ $=1-\bar{x}\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)=1$
+
+Now, solving for $=\sum_{i=1}^{n} d_i x_{i}$ $=\sum_{i=1}^{n}\left(\frac{1}{n}-c_i \bar{x}\right) x_{i}$ $=\sum_{i=1}^{n}\left(\frac{x_{i}}{n}\right)-\sum_{i=1}^{n} c_{i} x_{i} \bar{x}$ $=\bar{x}-\bar{x} \sum_{i=1}^{n} c_{i} x_{i}$ $=\bar{x}-\bar{x} \sum_{i=1}^{n} \frac{\left(x_{i}-\bar{x}\right) x_{i}}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}$ $=\bar{x}-\bar{x} \sum_{i=1}^{n} \frac{\left(x_{i}-\bar{x}\right) x_{i}-\bar{x} +\bar{x} }{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}$ $=\bar{x}-\bar{x} \sum_{i=1}^{n} \frac{\left(x_{i}-\bar{x}\right)^{2}}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}+\bar{x} \sum_{i=1}^{n} \frac{\left(x_{i}-\bar{x}\right) \bar{x}}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}$ $=\bar{x}-(\bar{x} \times 1)+0=0$
+
+Substituting these values in the equation: $=\beta_{0} \sum_{i=1}^{n} d i+\beta_{1} \sum_{i=1}^{n} d i x_{i}$ $=\beta_{0} \times 1 + \beta_{1} \times 0= \beta_{0}$ 
+
+**Question 3c** (2 points) Show that: $\operatorname{Var}\left[\hat{\beta}_{0} | X=x\right]=\sigma^{2}\left(\frac{1}{n}+\frac{\bar{x}^{2}}{S X X}\right)$
+
+**Answer** Solution:
+
+$=\operatorname{Var}\left[\hat{\beta}_{0} | X=x\right]$
+
+$=\operatorname{Var}\left[\sum_{i=1}^{n} d_{i} y_{i} | X=x\right]$
+
+$=\sum_{i=1}^{n} d_{i}^{2} \times \operatorname{Var}\left[y_{i} | X=x\right]$
+
+Because $\operatorname{Var}[c X]=c^{2} \operatorname{Var}[X]$
+
+$=\sum_{i=1}^{n} d_{i}^{2} \times \sigma^{2}$ 
+$=\sigma^{2} \sum_{i=1}^{n} d_{i}^{2}$ $=\sigma^{2} \sum_{i=1}^{n}\left(\frac{1}{n}-\frac{\left(x_{i}-\bar{x}\right) \bar{x}}{S X X}\right)^{2}$
+
+$=\sigma^{2} \sum_{i=1}^{n}\left(\frac{1}{n^{2}}-2\left(\frac{\left(x_{i}-\bar{x}\right) \bar{x}}{S X X}\right) \frac{1}{n}+\left(\frac{\left(x_{i}-\bar{x}\right) \bar{x}}{S X X}\right)^{2}\right)$
+
+$=\sigma^{2}\left(\left(n \times \frac{1}{n^{2}}\right)+0+\sum_{i=1}^{n}\left(\frac{\left(x_{i}-\bar{x}\right) \bar{x}}{S X X}\right)^{2}\right)$
+
+$=\sigma^{2}\left(\frac{1}{n}+\sum_{i=1}^{n}\left(\frac{\left(x_{i}-\bar{x}\right) \bar{x}}{S X X}\right)^{2}\right)$
+
+$=\sigma^{2}\left(\frac{1}{n}+\bar{x}^{2} \sum_{i=1}^{n} \frac{\left(x_{i}-\bar{x}\right)^{2}}{\left(\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}\right)^{2}}\right)$
+
+$=\sigma^{2}\left(\frac{1}{n}+\bar{x}^{2} \frac{1}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}\right)$
+
+$=\sigma^{2}\left(\frac{1}{n}+\bar{x}^{2} \frac{1}{S X X}\right)$
+
+
+**Question 3d** (1 point) Show that: $\sum_{i=1}^{n}\left(y_{i}-\hat{y}_{i}\right)=0$
+
+**Answer** Solution:
+
+
+$=\sum_{i=1}^{n}\left(y_{i}-\hat{y}_{i}\right)$
+
+Substituting $\hat{y}_{i}=\hat{\beta}_{0}+\hat{\beta}_{1} x_{i}$
+
+$=\sum_{i=1}^{n}\left(y_{i}-\hat{B}_{0}-\hat{B}_{1} x_{i}\right)$
+$=\sum_{i=1}^{n} \hat{\epsilon}_{i}$
+$=0$ 
+
+
+**Question 4a** (1 point) Show that the least squares estimate of $\hat{\beta}_{1}$ is: $\hat{\beta}_{1}=\frac{\sum_{i=1}^{n} x_{i} y_{i}}{\sum_{i=1}^{n} x_{i}^{2}}$
+
+**Answer** Solution:
+Using RSS equation
+$R S S=\sum_{i=1}^{n}\left(y_{i}-\hat{B}_{1} x_{i}\right)^{2}$
+
+$=\sum_{i=1}^{n}\left(y_{i}^{2}-2 \hat{B}_{1} x_{i} y_{i}+\left(\hat{B}_{1} x_{i}\right)^{2}\right)$
+
+$\frac{\partial R S S}{\partial B_{1}}=\sum_{i=1}^{n}\left(-2 x_{i} y_{i}+2 x_{i}^{2} \hat{B}_{1}\right)=0$
+
+$\rightarrow$ $2 \hat{B}_{1} \sum_{i=1}^{n} x_{i}^{2}=2 \sum_{i=1}^{n} x_{i} y_{i}$
+
+$\hat{B}_{1}=\frac{\sum_{i=1}^{n} x_{i} y_{i}}{\sum_{i=1}^{n} x_{i}^{2}}$
+
+**Question 4b** (1 point) Show that: $\mathrm{E}\left[\hat{\beta}_{1} | X=x\right]=\beta_{1}$
+
+**Answer** Solution:
+
+$E\left[\hat{B}_{1} | X=x\right]$
+$=E\left[\frac{\sum_{i=1}^{n} x_{i} y_{i}}{\sum_{i=1}^{n} x_{i}^{2}} | X=x\right]$
+
+$=\frac{1}{\sum_{i=1}^{n} x_{i}^{2}} \times E\left[\sum_{i=1}^{n} x_{i} y_{i} | X=x\right]$
+
+$=\frac{1}{\sum_{i=1}^{n} x_{i}^{2}} \times \sum_{i=1}^{n} E\left[x_{i} y_{i} | X=x\right]$
+
+$=\frac{1}{\sum_{i=1}^{n} x_{i}^{2}} \times \sum_{i=1}^{n} x_{i} E\left[y_{i} | X=x\right]$
+
+$=\frac{1}{\sum_{i=1}^{n} x_{i}^{2}} \times \sum_{i=1}^{n} x_{i}\left(B_{1} x_{i}\right)$
+
+$=B_{1} \frac{\sum_{i=1}^{n} x_{i}^{2}}{\sum_{i=1}^{n} x_{i}^{2}}=B_{1}$
+
+**Question 4c** (2 point) Show that: $\operatorname{Var}\left[\hat{\beta}_{1} | X=x\right]=\frac{\sigma^{2}}{\sum x_{i}^{2}}$
+
+**Answer** Solution:
+$\operatorname{Var}\left[\hat{\beta}_{1} | X=x\right]$
+
+$=\operatorname{Var}\left[\frac{\sum_{i=1}^{n} x_{i} y_{i}}{\sum_{i=1}^{n} x_{i}^{2}} | X=x\right]$$=\frac{1}{\left(\sum_{i=1}^{n} x_{i}^{2}\right)^{2}} \times \operatorname{Var}\left[\sum_{i=1}^{n} x_{i} y_{i} | X=x\right]$
+
+Because $\operatorname{Var}[c X]=c^{2} \operatorname{Var}[X]$
+
+$=\frac{\sum_{i=1}^{n} x_{i}^{2}}{\left(\sum_{i=1}^{n} x_{i}^{2}\right)^{2}} \times \operatorname{Var}\left[y_{i} | X=x\right]$$=\frac{1}{\sum_{i=1}^{n} x_{i}^{2}} \times \sigma^{2}$
+
+$=\frac{\sigma^{2}}{\sum_{i=1}^{n} x_{i}^{2}}$
+
+
+
+The below code is for Ecological Modeling class:
+Equation 1: 
+
+$\begin{aligned} X_{t+1}= X_t + r_x X_t\left(1- \frac{X_t+\alpha Y_t}{K_x}\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial X_t} =\frac {\partial X_{t+1}} {\partial X_t} \left( X_t + r_x X_t\left(1- \frac{X_t+\alpha Y_t}{K_x}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial X_t} = \frac {\partial X_{t+1}} {\partial X_t} \left( X_t + r_x X_t - r_x X_t \left(\frac{ X_t+\alpha Y_t}{K_x}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial X_t} = \frac {\partial X_{t+1}} {\partial X_t} \left( X_t + r_x X_t - \frac{r_x X_{t}^{2}}{K_x}- \frac{ \alpha r_x X_{t} Y_t}{K_x} \right)\end{aligned}$
+
+$\begin{aligned} = 1 + r - 2 \frac {r_x} {K_x} X_t - \frac{\alpha r_x  Y_t}{K_x} \end{aligned}$
+
+Equation 2:
+
+$\begin{aligned} X_{t+1}= X_t + r_x X_t\left(1- \frac{X_t+\alpha Y_t}{K_x}\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial Y_t} = \frac {\partial X_{t+1}} {\partial Y_t}\left(X_t + r_x X_t\left(1- \frac{X_t+\alpha Y_t}{K_x}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial Y_t} = \frac {\partial X_{t+1}} {\partial Y_t} \left(X_t + r_x X_t - r_x X_t \left(\frac{X_t+\alpha Y_t}{K_x}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial X_{t+1}} {\partial Y_t} = \frac {\partial X_{t+1}} {\partial Y_t}\left(X_t + r_x X_t - \frac{r_x X_{t}^{2}}{K_x}- \frac{r_x \alpha X_{t} Y_t}{K_x} \right)\end{aligned}$
+
+$\begin{aligned} = 0 + 0 - 0 - \frac{\alpha r_x  X_t}{K_x} \end{aligned}$
+
+$\begin{aligned} = - \frac{\alpha r_x  Y_t}{K_x} \end{aligned}$
+
+Equation 3: 
+
+$\begin{aligned} Y_{t+1}= Y_t + r_y Y_t\left(1- \frac{Y_t+\beta X_t}{K_y}\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial X_t} = \frac {\partial Y_{t+1}} {\partial X_t}\left(Y_t + r_y Y_t\left(1- \frac{Y_t+\beta X_t}{K_y}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial X_t} = \frac {\partial Y_{t+1}} {\partial X_t}\left(Y_t + r_y Y_t - r_y Y_{t} \left(\frac{Y_t+\beta X_t}{K_y}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial X_t} = \frac {\partial Y_{t+1}} {\partial X_t}\left(Y_t + r_y Y_t - \frac{r_y Y_{t}^{2}}{K_y}- \frac{r_x \beta X_{t} Y_t}{K_y} \right)\end{aligned}$
+
+$\begin{aligned} = 0 + 0 - 0 - \frac{\beta r_x  X_t}{K_y} \end{aligned}$
+
+$\begin{aligned} = - \frac{\beta r_y  Y_t}{K_y} \end{aligned}$
+
+Equation 4: 
+
+$\begin{aligned} Y_{t+1}= Y_t + r_y Y_t\left(1- \frac{Y_t+\beta X_t}{K_y}\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial Y_t} =\frac {\partial Y_{t+1}} {\partial Y_t}\left( Y_t + r_y Y_t\left(1- \frac{Y_t+\beta X_t}{K_y}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial Y_t} =\frac {\partial Y_{t+1}} {\partial Y_t}\left( Y_t + r_y Y_t - r_y Y_{t} \left(\frac{Y_t+\beta X_t}{K_y}\right)\right)\end{aligned}$
+
+$\begin{aligned} \frac {\partial Y_{t+1}} {\partial Y_t} = \frac {\partial Y_{t+1}} {\partial Y_t}\left(Y_t + r_y Y_t - \frac{r_y Y_{t}^{2}}{K_y}- \frac{r_x \beta X_{t} Y_t}{K_y}\right) \end{aligned}$
+
+$\begin{aligned} = 1 + r - 2 \frac {r_y} {K_y} Y_t - \frac{\alpha r_x  X_t}{K_y} \end{aligned}$
+
+
+
+
+
+
+
+
+

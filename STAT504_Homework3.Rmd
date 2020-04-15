@@ -1,0 +1,284 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## STAT 504: Linear Regression
+## Homework 3
+## Pratima K C
+
+*Question 1a (1 point) (1 point) Look at the output of summary(). What conclusion can you draw with respect to the investment strategy of this FoHF when you consider the estimated coefficients, the p-values, the global F-test and the R-squared (the small p-values should indicate the indices that a FoHFs invests in)? What does a large R-squared value indicate? *
+
+***Answer: Based on the output summary four predictors FIA, CTA, RV, and CA are the important variables because they have smaller p-value at significant level $\alpha$=0.05. Among these variable, the coefficient of CA, FIA, & CTA are poistive, therefore the increase in these variable will increase the expected average change in FoHF. However, RV has a negative coefficient, that mean an increase in this variable will decrease in the value FoHF. Therefore FoHFs can invests in increasing CA, FIA, and CTA variables and lower the RV. The global F-test showed that larger model is better than the empty model because p-values (2.2e-16) is very small. Lagre R-squared value mean we are able to explain the variance in the response is explained by the model. Also, lager R-squared value shows how good is the model. In this case the R-squared is 0.807 which mean it is good at explaining the variability in the response variable in the model.***
+
+
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library(car)# vif, boxCox
+library(corrplot) # corrplot
+setwd("F:/classes/winter_2020/stat504/homework3")
+load("FoHF.rda")
+#str(FoHF)
+fit_FoHF=lm(formula = FoHF~ RV + CA + FIA + EMN + ED + DS + MA + LSE + GM + EM + CTA + SS, data = FoHF)
+summary(fit_FoHF)
+
+```
+*Questions 1b (2 points) Check whether any assumptions are violated (TA and QQ plot). Also check whether there are problems with respect to multicollinearity.*
+
+***Answer: The normality assumption is not necessarly voilatied based on the histogram of residuals and QQ plot. These plots show the residuals are kind of normally distributed with little tail on left side. Since, there is not much curveture in the mean, the error of mean assumption is not violated either. Similarly, the constant variance assumption is also not violated as we can see in TA plots. Some of the point in the lower fitted value has less variance but overall it seems to have constant variance.***
+
+***Yes, there are multicollinearity problems, as we can see many predictors variables have vif values larger than 5 such as: EM, ED, DS, MA, LSF, and GM. The vif value above 5 suggest there is collinearity.***
+
+```{r, include=TRUE, echo=FALSE}
+library(corrplot)
+par(mfrow=c(2,2))
+hist(fit_FoHF$residuals, main="Histogram of Residual")
+plot(fit_FoHF, which=1)
+plot(fit_FoHF, which=2)
+#The vif values of the different predictor
+vif(fit_FoHF)
+#corrplot(cor(FoHF[,]))
+```
+
+*Question 1c (1 point) If you have solved the previous subproblem correctly, you will have found some issues. Formulate a strategy how those can be fixed in order to obtain a valid and interpretable result. Hint: Creating new predictors is not helpful.*
+
+***Answer: There was a multicollinearity issues with above model. In order to obtain a valid and interpretalble result we can remove some of the predicitors with higher vif values from the model.***
+
+***When we dropped the predictor variables such as ED, MA, LSE, then rest of the predictors vif values came below 5 in the new model. The RV seems to correlated with MA more than DS because when we included MA the vif value of RV goes up. Therefore, we droppoed MA from the model. The vif values for each predictors in new model is given below:***
+
+```{r, include=TRUE, echo=FALSE}
+#cor(FoHF)
+fit_FoHF_new=lm(formula = FoHF~ RV + CA + FIA + EMN +DS + GM + EM + CTA + SS, data = FoHF)
+vif(fit_FoHF_new)
+```
+
+*Question 1d (3 points) Perform variable selection using the BIC criterion. Implement the following search strategies, identify the best/final model and compare:*
+
+***(i) Stepwise variable selection, starting with the full model. ***
+
+***(ii) Stepwise variable selection, starting with the empty model.***
+
+***(iii) All Subsets variable selection.***
+
+***Answer: The BIC backward, forward and subset selection, all method choose the same model. The AIC vaulue for the best model is -940.78 for both BIC backward and forward setpwise selection method. The plot of all subsets variable selection method showed that the mallow cp and adjusted $R^2$ choose the larger model as a good model. However, the best final model selected using the BIC backward & forward stepwise and the subset variable selection is smaller and is given as:***
+
+$FoHF$ ~ $CA + FIA + ED + GM + CTA$
+
+
+
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+# BIC backward stepwise variable selection:
+fit.a <- lm(FoHF ~ ., data = FoHF)
+scp <- list(lower = ~ 1, upper = ~ .) # . is shorthand for all
+fit.b <- step(fit.a, scope = scp, direction = "backward", k = log(96))
+summary(fit.b)
+
+# BIC forward stewise variable selection:
+fit.a <- lm(FoHF ~ 1, data = FoHF)
+scp <- list(lower = ~ 1, upper = ~ RV + CA + FIA + EMN + ED + DS + MA + LSE + GM + EM + CTA + SS) # . is shorthand for all
+fit.b <- step(fit.a, scope = scp, direction = "forward", k = log(96))
+summary(fit.b)
+
+# Best subset selection
+library(leaps)
+subsets <- regsubsets(FoHF ~ RV + CA + FIA + EMN + ED + DS + MA + LSE + GM + EM + CTA + SS,
+                      data = FoHF)
+summary(subsets)
+
+bsubsets <- summary(subsets)
+bsubsets$bic
+par(mfrow = c(2,2))
+plot(bsubsets$bic) # BIC, AIC not implemented :(
+plot(bsubsets$cp) # Mallow's Cp
+plot(bsubsets$adjr2) # adjusted R squared
+plot(bsubsets$rsq)
+
+```
+
+*Question 2a (1 point) Some predictors in this data are probably colinear or multicolinear. Based on the description of the data, which predictors are those? Print a correlation matrix to and comment on the output.*
+
+***Answer: Based on the description of the data, the predictors the TeachGI and TeachNI is correlated with each other, apt could be correlated with TeachNI, TeachGI. Similarly, I expected there should be correlation between teachHours and teachNI & teachGI but the corrleation matrix shows there is very low correlation between these variable. Based on the correlation matrix, the foodIndex seems to be highly correlated with Apt, TeachNI, & TeachGI. There is also a good correlation between bus and other variables such as TeachGI, TeachNI. The larger correlation is between the TeachGI and TeachNI. The correlation matrix is given below:***
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library(alr4)
+#head(BigMac2003)
+cor(BigMac2003)
+
+```
+
+*Question 2b (1 point) Draw the scatterplot with BigMac on the vertical axis and FoodIndex on the horizontal axis. Provide a qualitative description of this graph.*
+
+***Answer: The scatterplot between BigMac vs. FoodIndex shows that they are negatively correlated. The lower FoodIndex has higher BigMac values. As the FoodIndex increase the BigMac values decreases. The plot doesnot seems to have linear relationship. The histogram plot showed that the BigMac is right skewed. This suggest that we should use transformation of the variable. The scatter plot between BigMac vs. FoodIndex and their histogram is given below:***
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE , fig.height=4, fig.align="center", fig.width=4}
+
+plot(BigMac2003$FoodIndex,BigMac2003$BigMac, main ="BigMac vs. FoodIndex", xlab ="FoodIndex", ylab = "BigMac")
+```
+```{r, include=TRUE, echo=FALSE}
+par(mfrow=c(1,2))
+hist(BigMac2003$BigMac, xlab = "BigMac", main = "Histogram of BigMac") #righskewed
+hist(BigMac2003$FoodIndex ,  xlab = "FoodIndex", main = "Histogram of FoodIndex")#kind of normal
+```
+
+*Question 2c (1 point) Use the Box-Cox method to find a transformation of BigMac so that the resulting scatterplot has a linear mean function.*
+
+***Answer: Using the Box-Cox function we found that $\lambda=$ nearly -0.5. Since, the $\lambda=-0.5$ the transformation used will be $BigMac^{-0.5}$.  The Box-cox plot and transformed scatter plot are shown below:***
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+fit_BigMacTrans=lm(formula = (BigMac2003$BigMac)^(-0.5) ~BigMac2003$FoodIndex)
+par(mfrow=c(1,2))
+fit_BigMac=lm(formula =BigMac~FoodIndex, data=BigMac2003)
+boxCox(fit_BigMac)
+#bc1=boxCox(fit_BigMac)
+#bc1$x[which.max(bc1$y)]
+plot(BigMac2003$FoodIndex, (BigMac2003$BigMac)^(-0.5), xlab = "FoodIndex", ylab = "BigMac^(-0.5)", main="(BigMac)^(-0.5) vs. FoodIndex")
+abline(fit_BigMacTrans)
+```
+
+
+
+*Question 2d (1 point) Two of the cities, with very large values for BigMac, are very infuential for selecting a transformation. What cities are those?*
+
+***Answer: The two of the cities, with very large values of BigMac are: Nairobi and Karachi based on the cook's distance. The cook's plot is given below:***
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, fig.height=4, fig.align="center", fig.width=4}
+
+plot(fit_BigMac, which=4)
+```
+
+
+*Question 2e (1 point) Remove the two cities you identified in the previous task and apply the Box-Cox method to the reduced data set. What has changed?*
+
+***Answer: When two cities with lagerst BigMac values is removed and Box-Cox method was applied to the reduced data set than the $\lambda$ value changed and shifted towards 0. Also, the center line of the $\lambda$ value changed from -0.5 to -0.3. The Box-cox plot of reduced data set is given below:***
+
+```{r, include=TRUE, echo=FALSE, fig.height=4, fig.align="center", fig.width=4}
+BigMac2003_remove=BigMac2003[which(!rownames(BigMac2003) %in% c("Nairobi", "Karachi")),]
+
+fit_BigMac2003_remove=lm(formula =BigMac~FoodIndex, data=BigMac2003_remove)
+boxCox(fit_BigMac2003_remove)
+#bc=boxCox(fit_BigMac2003_remove, plotit = FALSE)
+#bc$x[which.max(bc$y)]
+```
+
+*Question 2f (2 points) Draw the histogram of each predictor (every variable except BigMac) in the data set. Do some of them appear right skewed? Which ones?*
+
+***Answer: Based on the original and the removed dataset, yes, some of the predictor appears to be right skewed such as, Bread, Bus, Rice, TeachGI, and TeachNI. Histograms of all predictors from original and changed dataset is shown below:***
+
+```{r, include=TRUE, echo=FALSE}
+#head(BigMac2003)
+#Histogram of original dataset
+par(mfrow=c(3,3))
+hist(BigMac2003$Bread, xlab = "Bread", main="Histogram of Bread")
+hist(BigMac2003$Rice, xlab = "Rice", main="Histogram of Rice")
+hist(BigMac2003$FoodIndex, xlab = "FoodIndex", main="Histogram of FoodIndex")
+hist(BigMac2003$Bus, xlab = "Bus", main="Histogram of Bus")
+hist(BigMac2003$Apt, xlab = "Apt", main="Histogram of Apt")
+hist(BigMac2003$TeachGI, xlab = "TeachGI", main="Histogram of TeachGI")
+hist(BigMac2003$TeachNI, xlab = "TeachNI", main="Histogram of TeachNI")
+hist(BigMac2003$TaxRate, xlab = "TaxRate", main="Histogram of TaxRate")
+hist(BigMac2003$TeachHours, xlab = "TeachHours", main="Histogram of TeachHours")
+
+#Histogram of removed deatset
+par(mfrow=c(3,3))
+hist(BigMac2003_remove$Bread, xlab = "Bread", main="Histogram of Bread")
+hist(BigMac2003_remove$Rice, xlab = "Rice", main="Histogram of Rice")
+hist(BigMac2003_remove$FoodIndex, xlab = "FoodIndex", main="Histogram of FoodIndex")
+hist(BigMac2003_remove$Bus, xlab = "Bus", main="Histogram of Bus")
+hist(BigMac2003_remove$Apt, xlab = "Apt", main="Histogram of Apt")
+hist(BigMac2003_remove$TeachGI, xlab = "TeachGI", main="Histogram of TeachGI")
+hist(BigMac2003_remove$TeachNI, xlab = "TeachNI", main="Histogram of TeachNI")
+hist(BigMac2003_remove$TaxRate, xlab = "TaxRate", main="Histogram of TaxRate")
+hist(BigMac2003_remove$TeachHours, xlab = "TeachHours", main="Histogram of TeachHours")
+```
+
+*Question 2g (1 point) Use the data where you left out the two infuential points and fit the model with BigMac as the response (transformed using the Box-Cox suggested transformation) and the following predictors:log(Bread), log(Rice), log(Bus), Apt, log(TeachNI)*
+*Model 1: log(Bread), log(Rice); Model 2: log(Bread), log(Rice), Apt, log(Bus), Model 3: with all above predictors*
+
+*Which of these model acheaves the best leave-one-out cross-validation score?*
+
+***Answer: Here we use the log transformation on the response variable based on the Box-cox plot from the question 2e. The third model achieves the best leave-one-out cross validation score. The LOOCV score is small for the third and largest model (LOOCV score= 0.1008) therefore we opt to use this model. The selected model is given below:***
+
+***log(BigMac) ~ log(Bread) + log(Rice) + log(Bus) + Apt + log(TeachNI) ***
+
+```{r, include=TRUE, echo=FALSE}
+fit1=lm(formula = lm(log(BigMac)~log(Bread)+log(Rice) , data=BigMac2003_remove))
+fit2=lm(formula = lm(log(BigMac)~log(Bread)+log(Rice)+Apt+log(Bus) , data=BigMac2003_remove))
+fit3=lm(formula = lm(log(BigMac)~log(Bread)+log(Rice)+log(Bus)+Apt+log(TeachNI) , data=BigMac2003_remove))
+```
+
+```{r}
+loocv.lm<-function(mdl){
+  return(mean((residuals(mdl)/(1-hatvalues(mdl)))^2))
+}
+
+# The LOOCV score of Model 1
+loocv.lm(fit1)
+# The LOOCV score of  Model 2
+loocv.lm(fit2)
+# The LOOCV score of Model 3
+loocv.lm(fit3)
+
+```
+
+
+*Question 2h (2 points) For the model selected in the previous task, check the model diagnostic plots (TA, QQ, Cook's distance etc.). Do you notice any model assumption violations or any unusual points?*
+
+***Answer: Based on the following plots non of the model assumption seems to be violated. The histogram of residual shows that distribution of residuals is symmetric so it holds the normality assumption, also shown by normal QQ plot. The TA plot shows that there is constant variance so it holds the constant variance assumption. Since there is no curveture in the mean in TA plot, it seems to hold the zero mean assumption of the error E[Y|X=x]=0. Based on the Cook's distance Mexico city has the higher Cook's distance that is also less than 0.5 (Cook's threshold distance) so there is no significant outliers.  ***
+
+
+```{r, include=TRUE, echo=FALSE}
+par(mfrow=c(2,2))
+hist(fit3$residuals, xlab = "Residual", main = "Histogram of Residual")
+plot(fit3, which = 1)
+plot(fit3, which = 2)
+plot(fit3, which = 4)
+```
+
+
+*Question 3a (1 point) Using backward elimination with p-values for $\alpha_{crit}$ = 0.05 and the principle of hierarchy, which variable should be removed from the model next?*
+
+***Answer a) $X_1$, because $X_1$ does not have other interaction effect in the model and have second largest p-value after $X_4$. ($X_4$ has interactive effect so cannot be removed.)***
+
+*Question 3b (1 point) Following Preetam's suggestion, Marco decides to use the AIC criterion and the step() function in R for his variable selection. Below you are given a partial R output of the step() function where the current model is $Y$ ~ $X_2 + X_3 + X_6$.*
+
+***Answer: d) No variable will be added or removed in the next step, since the smallest AIC value is at none parameter.***
+
+*Question 3c (1 point) Consider the R output in sub task b). Let modelAIC be the AIC of the model $Y$ ~ $X_2 + X_6$ and let modelBIC be the BIC of that same model. Which of the following is true:*
+
+***Answer: a) $model_{AIC}$ < $model_{BIC}$, because BIC uses log(n), assuming sample size is greater than 9 in above model, log(9)>2.  ***
+
+*Queston 3d (1 point) The plot below shows AIC scores of all different models obtained by applying the stepwise model search in both directions to the empty model.*
+
+***Answer: c) The worst model in the plot does not contain variable $X_7$.***
+
+*Question 3e (1 point) Which of the following is true:*
+
+***Answer: d) The $R^2$ value of the model $Y$ ~ $X_1 + X_2 + X_3$ is smaller than the R2 value of $Y$ ~ $X_1 + X_2 + X_3 + X_4$. ***
+
+*Question 4a (1 point) Which of the following statements is false in the context of multiple linear regressions?*
+
+***Answer: a) If the global F-test is significant, then we can conclude that $\beta_j\neq$ 0 for all predictors $x_j$. ***
+
+*Question 4b (1 point) Which of the following statements is true?*
+
+***Answer: b) If a 95%-confidence interval for a regression coefficient $\beta_j$ contains the value 0, then the p-value for the test $H_0:\beta_j$ = 0 must be greater than 0.05***
+
+*Question 4c (1 point) Given the following plot, what is the most obvious model violation?*
+
+***Answer: b) Non-constant variance of the errors.***
+
+*Question 4d (1 point) Which of the following statements is true for a multiple linear regression model?*
+
+***Answer: The normality assumption of the errors can be checked by verifying whether the (standardized) residuals and the corresponding quantiles of a standard normal distribution have a linear relationship.***
+
+*Question 4e (1 point) Which of the following statements is false for mutiple linear regressions?*
+
+***Answer: b) Assuming that the sample size increases and predictors stay the same the individual p-values in the R summary will grow with the sample size.***
+
+
+

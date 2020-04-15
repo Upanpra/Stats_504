@@ -1,0 +1,367 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## STAT 504: Linear Regression
+## Homework 4
+## Pratima K C
+
+
+***Question 1 (a) (1 point) Perform a logistic regression and report the fitted regression equation.***
+
+Answer: The fitted regression equation is given below:
+
+$E[\hat{\eta}]= -4.73931 + 0.06773 \times income + 0.59863 \times age$
+
+$Ey=P\{y=1\}$ 
+
+$P\{y=1\}= \frac{1}{1+e^{-\eta}}= \frac{1}{1+e^{-(4.73931 + 0.06773 \times income + 0.59863 \times age)}}$
+
+The logistic regression summary is given below: 
+
+```{r, include=TRUE, echo=FALSE}
+setwd("F:/classes/winter_2020/stat504")
+car_data <- readRDS("F:/classes/winter_2020/stat504/car.RDS")
+#head(car_data)
+fit_car=glm(formula = purchase~income+age, data = car_data, family = "binomial")
+summary(fit_car)
+
+```
+
+
+
+***Question 1 (b) (2 points) Estimate exp ($\hat\beta_{income}$) and exp ($\hat\beta_{age}$) and give an interpretation of these estimates.***
+
+Answer: The estimate of exp ($\hat\beta_{income}$)=1.07007 and exp ($\hat\beta_{age}$)=1.8196. The odds of purchasing a car increases by 7.007% for every $1000 increase in the income when age is constant. The odds of purchasing a car increases by 82 (81.9)% for every year incease in the age when income is constant.
+
+```{r, include=TRUE, echo=TRUE}
+coef=exp(fit_car$coefficients)
+coef
+```
+
+
+
+***Question 1 (c) (1 point) How large is the estimated probability that a family with a yearly household income of 50 000 US $ and whose oldest car is 3 years old will buy a new car?***
+
+Answer: The estimated probability that a family with a yearly househod income of $50,000 US and whose oldest car is 3 years old to buy a new car is 0.609. 
+
+```{r, include=TRUE, echo=TRUE}
+new_car=data.frame(income=50, age=3)
+predict(fit_car,new_car, type="response")
+```
+
+
+
+***Question 1 (d) (1 point) Check for the presence of points with a large Cook's distance.***
+
+Answer: The point with larger Cook's distance are 9, 20, & 29. However, the Cook's distance of these point are less than 0.5. Therefore, these points may not necessaryly be the outlier. The Cook's distance plot is given below:
+
+```{r, include=TRUE, echo=FALSE}
+pf(0.5,3,30)
+par(mfrow=c(1,2))
+plot(fit_car, which=4)
+plot(fit_car, which=5)
+```
+
+
+
+***Question 1 (e) (1 point) Is the predictor age significant at the 5% level?***
+
+Answer: The p-value of coefficient of age is  0.1249 that is larger than 0.05. Therefore, predictor age is not significant at the 5% level. 
+
+
+
+***Question 1 (f) (1 point) Is there a non-negligible interaction between income and age?***
+
+Answer: The interaction between income and age is negligible because the p-value of the coefficient of interaction term (income:age) is 0.276, larger than 0.05 that mean it is not significant at 5% level. Also, based on the anova test the p-value=0.2569 is very high that is not significant at 0.05 level. So we fail to reject the null hypothesis and we choose the smaller model without interaction term (purchase ~ income + age).
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+fit_car1=glm(formula = purchase~income*age, data = car_data, family = "binomial")
+summary(fit_car1)
+#use anova 
+anova(fit_car, fit_car1, test="Chisq")
+
+```
+
+
+***Question 2 (a) (1 point) In order to fit a binomial logistic regression model construct a response matrix with two columns containing the number of people with and without hypertension, respectively.***
+
+Answer: The code is given below:
+
+```{r, include=TRUE, echo=TRUE}
+
+no.yes <- c("No", "Yes")
+smoking <- gl(2,1,7, no.yes)
+obesity <- gl(2,2,7, no.yes)
+snoring <- gl(2,4,7, no.yes)
+n.total <- c(60, 17, 8, 187, 85, 51, 23)
+n.hyper <- c(5, 2, 1, 35, 13, 15, 8)
+
+data=data.frame(cbind(smoking, obesity, snoring))
+data
+hyper_matrix=cbind(hyper=n.hyper, non_hyper=n.total-n.hyper)
+hyper_matrix
+```
+
+***Question 2 (b) (1 point) Fit a binomial regression model to the data. Assess the goodness-of-fit via the chi-square test for the residual deviance.***
+
+Answer: The p-value of the chi-square test is 0.006649 which is small and is significant at 0.05 level. That means the larger model (hyper ~ smoking + obesity + snoring) is a good fit.
+
+```{r}
+fit_hyper=glm(formula = hyper_matrix ~ data$smoking+data$obesity+data$snoring, family = "binomial")
+summary(fit_hyper)
+
+fit_hyper_empty=glm(formula= hyper_matrix ~ 1, family = "binomial")
+summary(fit_hyper_empty)
+
+anova(fit_hyper,fit_hyper_empty, test="Chisq")
+```
+
+***Question 2 (c) (2 points) Which variables in the model are significant at the 5% level? Use the likelihood-ratio test to obtain the answer. Hint: drop1 function in R.***
+
+Answer: Based on likelihood-ratio test the snoring predictor has p-value=0.00132 that is significant at 0.05 level. However, smoking predictor has p-value=0.07788 & obesity predictor has p-value= 0.05169. Both of these predictor have larger p-value than 0.05. Therefore, these two variables are not significant at 0.05 level.
+
+```{r, include=TRUE, echo=FALSE}
+drop1(fit_hyper, test="Chisq")
+#drop1(fit_hyper, test="LRT")
+
+```
+
+***Question 2(d) (2 points) Find a suitable sub-model compared to the model above using likelihood-ratio tests and backward elimination based on p-values. What is the model that you would choose?***
+
+Answer: Based on the summary of the full model, first we droped the smoking from the model because it has the larger p-value (0.07976) that is larger than 0.05 level and larger than obesity and snoring. Then created a new model excluding smoking such as (hyper ~ obesity + snoring). Then we used likelihood-ratio to test if any of these variable are insignificant. Based on the output of likelihood-ratio both the predictor variables have significant p-value (obesity:p-value= 0.013904 & snoring:p-value= 0.004421) at 0.05 level in the model. Therefore, we choose the the model. It is given below: 
+
+hyper ~ obesity + snoring
+
+The summary of chosen model with likelihood-ratio test is given below:
+
+```{r, include=TRUE, echo=TRUE}
+fit_hyper_drop_smoking=glm(formula = hyper_matrix ~ data$obesity+data$snoring, family = "binomial")
+summary(fit_hyper_drop_smoking)
+
+drop1(fit_hyper_drop_smoking, test="Chisq")
+
+```
+
+
+```{r, include=FALSE, echo=FALSE}
+
+fit_hyper_drop_obseity=glm(formula = hyper_matrix ~ data$snoring, family = "binomial")
+summary(fit_hyper_drop_obseity)
+
+anova(fit_hyper_drop_smoking, fit_hyper_drop_obseity, test="Chisq")
+#anova(fit_hyper, fit_hyper_drop_smoking, test="Chisq")
+
+```
+
+
+***Question 2 (e) (1 point) Compare the observed and fitted proportions for hypertension using the model you found in d). Additionally, compare the fitted and observed counts of hypertension in each group. Note that the fitted count is not always a whole number.***
+
+Answer: The fitted and observed proportions for hypertension seems to be fairly close to each other. However, for observation no. 5 the fitted proportion is little higher than observed. And for observaton no. 6 the fitted proportion is less than the observed proportions. 
+
+Similarly, the fitted counts were very similar to actual count. I rounded the fitted count because they were a whole number. Based on the rounded fitted count, the fitted counts are same in observation no. 2, 3, 7. The observation no. 1 & 5 has higher fitted count and observation no. 4 & 6 has less fitted cound than actual count. 
+
+Overall we could say that the fitted values are a good estimates of actual values. The code & table is given below:
+
+```{r}
+#fitted(fit_hyper_drop_smoking)
+fitted=predict(fit_hyper_drop_smoking, data, type = "response")
+
+#for the fitted proportions
+cbind(fitted, acutal_prop=n.hyper/n.total)
+
+#for the fitted counts
+cbind(fitted_count=fitted*n.total, fitted_round=round(fitted*n.total), actual_count=n.hyper)
+```
+
+
+***Question 3(a) (2 points) Load the data. Apply a log transformation on the response upo3 and remove the outlier (observation number 92).***
+
+Answer: In the ridge regression the coefficient doesnot become zero even when the log lambda is greater than 6. It also looks like all the far out coefficients in either direction are moving towards zero in same rate but never became exact zero. 
+
+In the lasso regression all coefficients shrink to zero when log lambda is around -2. Similar, in the elastic net regression all coefficients shrink to zero when log lambda is around -1. In both lasso & elastic net regression different coefficients far out have different rates to shrink to zero. However, the elastic net regression have larger lambda term that rule out the predictors with larger penality than lasso regression. 
+
+
+The code is given below: 
+
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+library(gss)
+data(ozone, package= "gss")
+
+logupo3=log(ozone$upo3)
+ozone$logupo3=logupo3
+d.ozone.e=ozone[-92,-1]
+
+# generate a design matrix
+require(sfsmisc)
+ff <- wrapFormula(logupo3~., data=d.ozone.e, wrapString="poly(*,degree=3)")
+ff <- update(ff, logupo3 ~ .^3)
+mm <- model.matrix(ff, data=d.ozone.e)
+
+# penalized regression
+require(glmnet)
+ridge <- glmnet(mm, d.ozone.e$logupo3, alpha=0)
+lasso <- glmnet(mm, d.ozone.e$logupo3, alpha=1)
+elnet <- glmnet(mm, d.ozone.e$logupo3, alpha=.5)
+```
+```{r, warning=FALSE, message=FALSE}
+plot(ridge, xvar="lambda")
+plot(lasso, xvar="lambda")
+plot(elnet, xvar="lambda")
+```
+
+
+***Question 3 (b) (2 points) Select an optimal tuning parameter $\lambda$ with an elastic net penalty $\alpha$= 0.5 via 10-fold cross validation. Find an optimal $\lambda$ according to the "1-std error rule" from a plot that shows the mean squared error as a function of log($\lambda$).***
+
+Answer: The optial lambda as 1-std error rule, is 0.1140. The plot is given below:
+
+```{r}
+set.seed(1)
+cv.eln <- cv.glmnet(mm,d.ozone.e$logupo3,alpha=0.5, nfolds=10)
+cv.eln$lambda.1se
+plot(cv.eln)
+```
+
+
+***Question 4 (a) (2 points) First fit an OLS with all variables and perform a residual analysis. Hint: Check whether all varialbes are encoded properly (see as.factor).***
+
+Answer: Based on the QQ plot normality assumption is not violated. The TA plot shows that the mean of residual is zero since there is no curvetur in mean line therefore this assumption is not violated. However, the variance is little tapering towards both ends (lower and higher fitted values) but over all there is a constant variance. Therefore, it seems to hold the constant variance assumption too. The summary in graphs are given below: 
+
+```{r, include=TRUE, echo=TRUE}
+load(file="CustomerWinBack.rda")
+#str(cwb)
+cwb$gender=as.factor(cwb$gender)
+fit1=lm(formula=duration~., data = cwb)
+summary(fit1)
+par(mfrow=c(2,2))
+plot(fit1)
+```
+
+***Question 4 (b) (1 point) Choose a model using stepwise model selection (forward-backward) starting from the model given in part a) and the AIC criterion. What predictors are included in the optimal model according to the above selection?***
+
+Answer: Based on the stepwise model selection (forward-backward) and AIC criterion the optimal model has AIC 3292.27 value and includes predictors such as offer, lapse, price and genter. The optimal model is given below:
+
+$duration$ ~ $offer + lapse + price + gender$
+
+```{r, include=TRUE, echo=TRUE}
+# AIC forward-backward (both) stepwise variable selection:
+scp <- list(lower = ~ 1, upper = ~ offer+lapse+price+gender+age, data=cwb) 
+fit.aic <- step(fit1, scope = scp, direction = "both", k =2)
+summary(fit.aic)
+
+```
+
+***Question 4 (c) (1 point) Choose a model using stepwise model selection (forward-backward) starting from the model given in part a) and the BIC criterion. What predictors are included in the optimal model according to the above selection?***
+
+Answer: Based on the stepwise model selection (forward-backward) and BIC criterion the optimal model has BIC 3310.7 value and includes predictors offer, lapse, price and genter. The optimal model is given below:
+
+$duration$ ~ $offer + lapse + price + gender$
+
+```{r, include=TRUE, echo=TRUE}
+# BIC forward-backward (both) stepwise variable selection:
+scp <- list(lower = ~ 1, upper = ~ offer+lapse+price+gender+age, data=cwb)
+fit.bic <- step(fit1, scope = scp, direction = "both", k = log(295))
+summary(fit.bic)
+```
+
+
+***Question 4 (d) (2 points) What is the optimal lambda (see lambda.1se in R)? What predictors are included in this model? What is the fitted ridge equation?***
+
+Answer: The optimal lambda is 428.7102. The predictors included in the model are offer, lapse, price, genger1, and age. The fitted ridge equation is given below: 
+
+$E[\hat{duration}]=725.3438498 -3.7541471 \times offer +  0.4083362 \times laspe   -3.4432545 \times price + 40.8052383 \times gender -0.1931633\times age$
+
+
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+library(glmnet)
+## Lasso does not work with factor variables
+set.seed(1)
+xx <- model.matrix(duration~ 0+., cwb)[,-4]
+yy <- cwb$duration
+cv.rigdge=cv.glmnet(xx, yy, alpha=0)
+optimal_lamba_R=cv.rigdge$lambda.1se
+optimal_lamba_R
+
+fit.rigdge=glmnet(xx,yy, alpha = 0, lambda = optimal_lamba_R)
+coef(fit.rigdge)
+```
+
+***Question 4 e (2 points) Fit a lasso regression with optimized $\lambda$. What is the optimal lambda (see lambda.1se in R)? What predictors are included in this model? What is the fitted lasso equation?***
+
+Answer: The optimal lambda is 49.29126. The predictors included in the model is price. The fitted ridge equation is given below: 
+
+$E[\hat{duration}]=675.433450 -5.094912 \times price$
+
+
+```{r , include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+library(glmnet)
+## Lasso does not work with factor variables
+set.seed(1)
+xx <- model.matrix(duration~ 0+., cwb)[,-4]
+yy <- cwb$duration
+cv.lasso=cv.glmnet(xx, yy, alpha=1)
+optimal_lamba=cv.lasso$lambda.1se
+optimal_lamba
+fit.lasso=glmnet(xx,yy, alpha = 1, lambda = optimal_lamba)
+coef(fit.lasso)
+```
+
+***Question 4 (f) (2 points) Finally, use a 5-fold cross validation to compare the predictive performance of all of the models in this task. What are the best and worst performing models?***
+
+Answer: The AIC & BIC models have the smallest mean squared prediciton error. Therefore, these are the best performing models. However, lasso regresion has the higher mean squared prediction error value so it is the worst performing model.  
+
+```{r}
+## cross validation preparation
+pre.ols <- c()
+pre.aic <- c()
+pre.bic <- c()
+pre.rr <- c()
+pre.las <- c()
+folds <- 5
+sb <- round(seq(0,nrow(cwb),length=(folds+1)))
+
+## cross validation Loop
+for (i in 1:folds){
+  ## define training and test datasets
+  test <- (sb[((folds+1)-i)]+1):(sb[((folds+2)-i)])
+  train <- (1:nrow(cwb))[-test]
+  
+  ## fit models
+  fit.ols <- lm(duration ~ ., data=cwb[train,])
+  fit.aic <- lm(duration ~ offer+lapse+price+gender, data=cwb[train,])
+  fit.bic <- lm(duration ~ offer+lapse+price+gender, data=cwb[train,])
+  xx <- model.matrix(duration~0+., cwb[train,])[,-4]
+  yy <- cwb$duration[train]
+  fit.rr <- glmnet(xx,yy, lambda = cv.rigdge$lambda.1se, alpha =0)
+  fit.las <- glmnet(xx,yy, lambda = cv.lasso$lambda.1se, alpha = 1)
+  
+  ## create predictions
+  pre.ols[test] <- predict(fit.ols, newdata=cwb[test,])
+  pre.aic[test] <- predict(fit.aic, newdata=cwb[test,])
+  pre.bic[test] <- predict(fit.bic, newdata=cwb[test,])
+  pre.rr[test] <- model.matrix(duration~., cwb[test,])%*%as.numeric(coef(fit.rr))
+  pre.las[test] <- model.matrix(duration~., cwb[test,])%*%as.numeric(coef(fit.las))
+
+}
+## Finally, compute the mean squared prediction error:
+mean((cwb$duration-pre.ols)^2)
+mean((cwb$duration-pre.aic)^2)
+mean((cwb$duration-pre.bic)^2)
+mean((cwb$duration-pre.rr)^2)
+mean((cwb$duration-pre.las)^2)
+
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,94 @@
+---
+title: "Homework2_STAT502"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## STAT 504: Linear Regression
+## Pratima K C
+
+
+
+***Question 1a (1 point) Draw the scatterplot matrix of HT2, HT9, WT2, WT9, ST9 and BMI18. Compare the scatterplot matrix with the matrix of sample correlations for these variables. What do you observe? Compare the relationship of the predictors with the response and the pairwise predictor relationships. ***
+
+***Answer When comparing the ...***
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library(alr4)
+#head(BGSgirls)
+#summary(BGSgirls)
+pairs(~HT2 + HT9 + WT2 +  WT9 +  ST9 + BMI18  , data=BGSgirls , main="Scatter Plot")
+
+print(cor(BGSgirls[,c(1,2,3,4,6,11)]), 3)
+
+```
+
+***Question 1 b***
+
+***Answer Compared to model 1 non of the predictor included in the model 2 are significant***
+
+```{r, include=TRUE, echo=FALSE}
+model1= lm(formula = BMI18 ~ WT9+ST9, data=BGSgirls)
+summary(model1)
+
+model2=lm(formula = BMI18 ~ HT2+WT2+ HT9+ WT9+ ST9, data=BGSgirls)
+summary(model2)
+```
+
+***Question 1c***
+
+***Answer ***
+
+```{r, include=TRUE, echo=FALSE}
+anova(model1, model2)
+
+```
+
+***Question 1c (i)(1 point) What is the test statitic for this test?***
+
+***Answer: The test statistics for this test is 2.7421***
+
+***Question 1c (ii)(1 point) What distribution does this test statistic follow under the null hypothesis (specity the degrees of freedom)***
+
+***Answer: The degrees of freedom is (df)= 67-3 = 64***
+
+***Question 1c (iii) (1 point)Do you reject the null hypothesis?***
+
+***Answer: Since, the p-value is higher than alpha (0.05) we cannot reject the null hypothesis.***
+
+***Question 1c (iv) (1 point)Based on the resuld of the hypothesis test, which model would you choose?***
+
+***Answer: Since, we cannot reject the null hypothesis in bigger model (model2), I would choose to use smaller model (model 1) ***
+
+***Question 1d (2 point) Plot the histogram of the residuals and the TA plot from the model 2 above. Do the normality and the constant variance assumptions appear to hold?***
+
+***Answer: The histogram seems to be right skewed so it does not holds the normality assumption. The TA plots shows that data mostly have the connstant variable through out but it gets spreaded towards the right side with higher fitted values and this side have higher variance. ***
+
+```{r, include=TRUE, echo=FALSE}
+#hist(model2$residuals, main="Histogram of Residuals")
+#plot(model2, c=1)
+```
+
+***Question 1e (2 point) What are the $$/sigma_hat$$ and the in-sample MSE of model 2 above?***
+
+***Question 1f (5 point) Consider model 2 summary output and test null hypotheses***
+
+***Answer***
+```{r, include=FALSE, echo=FALSE}
+
+p.vals <- summary(model2)$coefficients[2:6,4]
+print(p.vals)
+p.bonf <- p.adjust(p.vals, method="bonferroni")
+print(p.bonf)
+print("Adjusted for p-value=0.1")
+p.bonf < 0.1
+
+```
+
+```{r, include=FALSE, echo=FALSE}
+
+```
+
